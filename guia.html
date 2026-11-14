@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guía Staff</title>
+  <link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+  <main>
+    <header class="logo">
+      <div class="luna">🌙</div>
+      <h1>Guía Staff</h1>
+    </header>
+
+    <div class="barra">
+      <span>Hola, <strong id="quien">…</strong></span>
+      <button class="secundario" id="salir">Cerrar sesión</button>
+    </div>
+
+    <div id="contenido"><p class="msg">Cargando…</p></div>
+    <p class="pie">Contenido privado para el staff verificado.</p>
+  </main>
+
+  <script>
+    const token = localStorage.getItem("ns_token");
+    const volver = () => {
+      localStorage.removeItem("ns_token");
+      localStorage.removeItem("ns_nombre");
+      location.replace("/");
+    };
+    document.getElementById("salir").addEventListener("click", volver);
+
+    (async () => {
+      if (!token) return volver();
+      try {
+        const r = await fetch("/api/guia", { headers: { authorization: "Bearer " + token } });
+        if (!r.ok) return volver();
+        const d = await r.json();
+        document.getElementById("quien").textContent = d.nombre;
+
+        const cont = document.getElementById("contenido");
+        cont.textContent = "";
+        d.secciones.forEach((s, i) => {
+          const det = document.createElement("details");
+          if (i === 0) det.open = true;
+          const sum = document.createElement("summary");
+          sum.textContent = s.titulo;
+          const ul = document.createElement("ul");
+          s.items.forEach((t) => {
+            const li = document.createElement("li");
+            li.textContent = t;
+            ul.appendChild(li);
+          });
+          det.append(sum, ul);
+          cont.appendChild(det);
+        });
+      } catch {
+        document.getElementById("contenido").textContent = "No se pudo cargar la guía.";
+      }
+    })();
+  </script>
+</body>
+</html>
